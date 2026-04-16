@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+
+  mongodb:
+    image: mongo:4.4
+    container_name: pritunl-mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    volumes:
+      - ./volumes/mongodb:/data/db
+    networks:
+      - pritunl-net
+
+  pritunl:
+    image: jippi/pritunl
+    container_name: pritunl-server
+    restart: always
+    privileged: true
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+    environment:
+      PRITUNL_MONGODB_URI: ${PRITUNL_MONGODB_URI}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "1194:1194/udp"
+    volumes:
+      - ./volumes/pritunl:/var/lib/pritunl
+    depends_on:
+      - mongodb
+    networks:
+      - pritunl-net
+
+networks:
+  pritunl-net:
+    driver: bridge
